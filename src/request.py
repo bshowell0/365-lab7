@@ -1,4 +1,4 @@
-from . import printer
+from . import printer, validate
 
 def fr1(cursor):
     request = (
@@ -45,4 +45,9 @@ def fr1(cursor):
     )
     cursor.execute(request)
     result = cursor.fetchall()
-    printer.fr1(result)
+    printer.fr1_res(result)
+
+def fr2(cursor):
+    choices = printer.fr2_req()
+    choices = validate.fr2_req(choices)
+    print(choices)

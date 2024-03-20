@@ -19,7 +19,7 @@ def main():
         if validate.fr1(usr):
             request.fr1(cursor)
         elif validate.fr2(usr):
-            pass
+            request.fr2(cursor)
         elif validate.fr3(usr):
             pass
         elif validate.fr4(usr):

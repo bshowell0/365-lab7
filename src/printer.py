@@ -46,8 +46,8 @@ def fr2_req():
         "Last name: ",
         "Room code (“Any” to indicate no preference): ",
         "Bed type (“Any” to indicate no preference): ",
-        "Begin date of stay: ",
-        "End date of stay: ",
+        "Begin date of stay (YYYY-MM-DD): ",
+        "End date of stay (YYYY-MM-DD): ",
         "Number of children: ",
         "Number of adults: "
     ]
@@ -61,5 +61,4 @@ def fr2_req():
     for i, option in enumerate(options):
         choices[option] = input(f"\033[0m{disp[i]}\033[4m") if i > 0 else input("\033[3;13H\033[4m")
     print("\033[0m", end="")
-    print(choices)
     return choices
