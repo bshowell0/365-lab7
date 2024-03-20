@@ -1,4 +1,4 @@
-from . import pprint
+from . import printer
 
 def fr1(cursor):
     request = (
@@ -45,4 +45,4 @@ def fr1(cursor):
     )
     cursor.execute(request)
     result = cursor.fetchall()
-    pprint.fr1(result)
+    printer.fr1(result)

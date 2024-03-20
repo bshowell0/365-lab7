@@ -1,9 +1,17 @@
 import os
+import pandas as pd
+
+pd.set_option('display.max_columns', None)
+try:
+    terminal_width = os.get_terminal_size().columns
+    pd.set_option('display.width', terminal_width)
+except OSError:
+    pass
 
 def welcome():
     try:
         terminal_height = os.get_terminal_size().lines - 2
-    except:
+    except OSError:
         terminal_height = 100
     print("\n" * terminal_height + "\033[H\033[J", end="")
     print("Welcome to the Hotel Reservation System!")
@@ -27,4 +35,6 @@ def usr(extra=""):
 
 
 def fr1(data):
-    print(data)
+    df = pd.DataFrame(data, columns=["RoomCode", "RoomName", "Beds", "BedType", "MaxOcc", "BasePrice", "Decor", "PopularityScore", "NextAvailableCheckIn", "LengthOfStay", "CheckoutDate"])
+    df.index += 1
+    print(df)

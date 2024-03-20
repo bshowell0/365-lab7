@@ -13,8 +13,8 @@ def main():
                                    host='mysql.labthreesixfive.com',
                                    database=os.getenv('DB_NAME'))
     cursor = conn.cursor()
-    pprint.welcome()
-    usr = pprint.usr()
+    printer.welcome()
+    usr = printer.usr()
     while not validate.quit(usr):
         if validate.fr1(usr):
             request.fr1(cursor)
@@ -25,8 +25,8 @@ def main():
         elif validate.fr4(usr):
             pass
         else:
-            pprint.invalid()
-        usr = pprint.usr("\n")
+            printer.invalid()
+        usr = printer.usr("\n")
 
 
 
