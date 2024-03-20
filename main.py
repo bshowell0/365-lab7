@@ -17,7 +17,7 @@ def main():
     usr = pprint.usr()
     while not validate.quit(usr):
         if validate.fr1(usr):
-            pass
+            request.fr1(cursor)
         elif validate.fr2(usr):
             pass
         elif validate.fr3(usr):

@@ -24,3 +24,7 @@ def usr(extra=""):
     usr = input(extra + spiel).lower()
     print("\033[H\033[J", end="")
     return usr
+
+
+def fr1(data):
+    print(data)
