@@ -10,7 +10,7 @@ load_dotenv()
 def main():
     conn = mysql.connector.connect(user=os.getenv('DB_USER'),
                                    password=os.getenv('DB_PASSWORD'),
-                                   host='mysql.labthreesixfive.com',
+                                   host=os.getenv('DB_HOST'),
                                    database=os.getenv('DB_NAME'))
     cursor = conn.cursor()
     printer.welcome()
@@ -23,6 +23,8 @@ def main():
         elif validate.fr3(usr):
             pass
         elif validate.fr4(usr):
+            pass
+        elif validate.fr5(usr):
             pass
         else:
             printer.invalid()

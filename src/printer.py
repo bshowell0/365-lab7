@@ -27,6 +27,7 @@ def usr(extra=""):
         f"FR2: {f['u']}Res{f['r']}ervations\n"
         f"FR3: Reservation {f['u']}Cancel{f['r']}lation\n"
         f"FR4: {f['u']}Detail{f['r']}ed Reservation {f['u']}Info{f['r']}rmation\n"
+        f"FR5: {f['u']}Rev{f['r']}enue\n"
         f"{f['u']}Q{f['r']}uit\n"
     )
     usr = input(extra + spiel).lower()

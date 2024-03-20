@@ -12,3 +12,6 @@ def fr3(usr):
 
 def fr4(usr):
     return usr == "fr4" or usr == "detailed reservation information" or usr == "detail" or usr == "info"
+
+def fr5(usr):
+    return usr == "fr5" or usr == "revenue" or usr == "rev"
