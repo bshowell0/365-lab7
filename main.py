@@ -5,31 +5,31 @@ from src import *
 
 load_dotenv()
 
+# add `# type: ignore` to supress incorrect not defined errors
 
 def main():
-    pprint.welcome()  # type: ignore
-    usr = pprint.usr()  # type: ignore
-    while usr != "q" and usr != "quit":
-        # do stuff
-        if usr == "fr1" or usr == "rooms and rates" or usr == "rooms" or usr == "rates":
+    conn = mysql.connector.connect(user=os.getenv('DB_USER'),
+                                   password=os.getenv('DB_PASSWORD'),
+                                   host='mysql.labthreesixfive.com',
+                                   database=os.getenv('DB_NAME'))
+    cursor = conn.cursor()
+    pprint.welcome()
+    usr = pprint.usr()
+    while not validate.quit(usr):
+        if validate.fr1(usr):
             pass
-        elif usr == "fr2" or usr == "reservations" or usr == "res":
+        elif validate.fr2(usr):
             pass
-        elif usr == "fr3" or usr == "reservation cancellation" or usr == "cancel":
+        elif validate.fr3(usr):
             pass
-        elif usr == "fr4" or usr == "detailed reservation information" or usr == "detail" or usr == "info":
+        elif validate.fr4(usr):
             pass
         else:
-            pprint.invalid()  # type: ignore
-        usr = pprint.usr("\n")  # type: ignore
+            pprint.invalid()
+        usr = pprint.usr("\n")
 
 
 
-    # conn = mysql.connector.connect(user=os.getenv('DB_USER'),
-    #                                password=os.getenv('DB_PASSWORD'),
-    #                                host='mysql.labthreesixfive.com',
-    #                                database=os.getenv('DB_NAME'))
-    # cursor = conn.cursor()
 
     # conn.commit()
 
