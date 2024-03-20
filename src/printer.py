@@ -35,7 +35,31 @@ def usr(extra=""):
     return usr
 
 
-def fr1(data):
+def fr1_res(data):
     df = pd.DataFrame(data, columns=["RoomCode", "RoomName", "Beds", "BedType", "MaxOcc", "BasePrice", "Decor", "PopularityScore", "NextAvailableCheckIn", "LengthOfStay", "CheckoutDate"])
     df.index += 1
     print(df)
+
+def fr2_req():
+    disp = [
+        "First name: ",
+        "Last name: ",
+        "Room code (“Any” to indicate no preference): ",
+        "Bed type (“Any” to indicate no preference): ",
+        "Begin date of stay: ",
+        "End date of stay: ",
+        "Number of children: ",
+        "Number of adults: "
+    ]
+    print(
+        "Please enter the following information to make a reservation:\n",
+        "\n".join(disp),
+        sep="\n"
+    )
+    options = ["first", "last", "room", "bed", "start", "end", "children", "adults"]
+    choices = {}
+    for i, option in enumerate(options):
+        choices[option] = input(f"\033[0m{disp[i]}\033[4m") if i > 0 else input("\033[3;13H\033[4m")
+    print("\033[0m", end="")
+    print(choices)
+    return choices
