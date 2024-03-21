@@ -78,13 +78,11 @@ def fr2(cursor):
     if choices["bed"] != 'ANY':
         query += f""" AND r.bedType = '{choices["bed"]}'"""
     query += "\nORDER BY r.basePrice;"
-
-    print(query)
-
+    # print(choices)
     cursor.execute(query)
     result = cursor.fetchall()
     if result != []:
-        printer.fr2_res(result)
+        printer.fr2_res(result, choices)
     else:
         fr2_res_empty(cursor, choices)
 

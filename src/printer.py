@@ -1,5 +1,8 @@
 import os
 import pandas as pd
+from datetime import datetime, timedelta
+from decimal import Decimal
+
 
 pd.set_option('display.max_columns', None)
 try:
@@ -10,7 +13,7 @@ except OSError:
 
 def welcome():
     try:
-        terminal_height = os.get_terminal_size().lines - 2
+        terminal_height = os.get_terminal_size().lines - 1
     except OSError:
         terminal_height = 100
     print("\n" * terminal_height + "\033[H\033[J", end="")
@@ -51,11 +54,7 @@ def fr2_req():
         "Number of children: ",
         "Number of adults: "
     ]
-    print(
-        "Please enter the following information to make a reservation:\n",
-        "\n".join(disp),
-        sep="\n"
-    )
+    print("Please enter the following information to make a reservation:\n", "\n".join(disp), sep="\n")
     options = ["first", "last", "room", "bed", "start", "end", "children", "adults"]
     choices = {}
     for i, option in enumerate(options):
@@ -63,7 +62,27 @@ def fr2_req():
     print("\033[0m\033[H\033[J", end="")
     return choices
 
-def fr2_res(data):
+def fr2_res(data, choices):
+    start_date = datetime.strptime(choices['start'], '%Y-%m-%d').date()
+    end_date = datetime.strptime(choices['end'], '%Y-%m-%d').date()
+    num_weekdays = 0
+    num_weekends = 0
+    for i in range((end_date - start_date).days):
+        if (start_date + timedelta(days=i)).weekday() < 5:
+            num_weekdays += 1
+        else:
+            num_weekends += 1
     df = pd.DataFrame(data, columns=["RoomCode", "RoomName", "Beds", "BedType", "MaxOcc", "BasePrice", "Decor"])
+    df["TotalCost"] = num_weekdays * df['BasePrice'] + num_weekends * df['BasePrice'] * Decimal('1.1')
+    df["TotalCost"] = df["TotalCost"].map("{:.2f}".format)
     df.index += 1
     print(df)
+    choice = None
+    while choice is None or (not choice.isdigit() or int(choice) not in df.index):
+        if choice is not None:
+            print("Invalid input. Please enter the number of the room you'd like to reserve.")
+        choice = input("Choose the number of the room you'd like to reserve, or 0 to cancel: ")
+        print("\033[H\033[J", end="")
+    choice = int(choice)
+    if choice == 0:
+        return
