@@ -29,7 +29,7 @@ def fr2_req(choices):
         else:
             raise ValueError("Invalid input in choices", key, choices[key])
     if not is_valid_date(choices["start"]) < is_valid_date(choices["end"]):
-        raise ValueError("Start date must be before end date.")
+        raise ValueError("Start date must be before end date.", choices["start"], choices["end"])
     return choices
 
 def is_valid_date(date_str, when=""):
