@@ -50,6 +50,7 @@ def fr1(cursor):
 def fr2(cursor):
     choices = printer.fr2_req()
     choices = validate.fr2_req(choices)
+
     query = """
         SELECT
             r.RoomCode,
@@ -68,23 +69,29 @@ def fr2(cursor):
                 FROM
                     lab7_reservations AS res
                 WHERE
-                    (res.CheckIn < ? AND res.Checkout > ?)
+                    (res.CheckIn < %s AND res.Checkout >= %s)
             )
-            AND r.maxOcc >= ?
+            AND r.maxOcc >= %s
     """
-    params = [choices["end"], choices["start"], int(choices["children"]) + int(choices["adults"])]
+    params = [
+        choices["end"],
+        choices["start"],
+        str(int(choices["children"]) + int(choices["adults"]))
+    ]
 
     if choices["room"] != 'ANY':
-        query += " AND r.RoomCode = ?"
+        query += " AND r.RoomCode = %s"
         params.append(choices["room"])
     if choices["bed"] != 'ANY':
-        query += " AND r.bedType = ?"
+        query += " AND r.bedType = %s"
         params.append(choices["bed"])
 
     query += " ORDER BY r.basePrice;"
 
+    print(query, params)
     cursor.execute(query, params)
-    cursor.execute(query)
+
+
     result = cursor.fetchall()
     if result != []:
         printer.fr2_res(cursor, result, choices)

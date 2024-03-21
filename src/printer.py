@@ -62,7 +62,7 @@ def fr2_req():
     print("\033[0m\033[H\033[J", end="")
     return choices
 
-def fr2_res(data, choices):
+def fr2_res(cursor, data, choices):
     start_date = datetime.strptime(choices['start'], '%Y-%m-%d').date()
     end_date = datetime.strptime(choices['end'], '%Y-%m-%d').date()
     num_weekdays = 0
@@ -90,6 +90,8 @@ def fr2_res(data, choices):
     # print(df[:num_selected])
     # print("\033[92m", '\n'.join(df[num_selected:num_selected+1].to_string().split('\n')[1:]), "\033[0m", sep="")
     # print('\n'.join(df[num_selected+1:].to_string().split('\n')[1:]))
+
+
     chosen_room = df[num_selected-1:num_selected].to_string().split('\n')
     print(f"{chosen_room[0]}\n\033[92m{chosen_room[1]}\033[0m\n")
     print("Your reservation under the name of", choices["first"], choices["last"], "for room", df.loc[num_selected, "RoomCode"], "has been made for", choices["start"], "until", choices["end"])
