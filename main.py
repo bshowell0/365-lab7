@@ -19,7 +19,9 @@ def main():
         if validate.fr1(usr):
             request.fr1(cursor)
         elif validate.fr2(usr):
-            request.fr2(cursor)
+            if request.fr2(cursor):
+                conn.commit()
+                print("Commit successful.")
         elif validate.fr3(usr):
             pass
         elif validate.fr4(usr):

@@ -2,6 +2,7 @@ import os
 import pandas as pd
 from datetime import datetime, timedelta
 from decimal import Decimal
+from . import request
 
 
 pd.set_option('display.max_columns', None)
@@ -85,14 +86,16 @@ def fr2_res(cursor, data, choices):
     print("\033[H\033[J", end="")
     num_selected = int(num_selected)
     if num_selected == 0:
-        return
+        return False
     # # failed experiment
     # print(df[:num_selected])
     # print("\033[92m", '\n'.join(df[num_selected:num_selected+1].to_string().split('\n')[1:]), "\033[0m", sep="")
     # print('\n'.join(df[num_selected+1:].to_string().split('\n')[1:]))
 
-
+    if not request.fr2_res_update(cursor, choices, df.loc[num_selected]):
+        print("Reservation failed. Please try again.")
+        return False
     chosen_room = df[num_selected-1:num_selected].to_string().split('\n')
     print(f"{chosen_room[0]}\n\033[92m{chosen_room[1]}\033[0m\n")
     print("Your reservation under the name of", choices["first"], choices["last"], "for room", df.loc[num_selected, "RoomCode"], "has been made for", choices["start"], "until", choices["end"])
-    # TODO - make and print a reservation code, then actually add it to the database
+    return True

@@ -1,4 +1,5 @@
 from . import printer, validate
+from datetime import datetime
 
 def fr1(cursor):
     request = (
@@ -94,13 +95,26 @@ def fr2(cursor):
 
     result = cursor.fetchall()
     if result != []:
-        printer.fr2_res(cursor, result, choices)
+        return printer.fr2_res(cursor, result, choices)
     else:
-        fr2_res_empty(cursor, choices)
+        return fr2_res_empty(cursor, choices)
 
-def fr2_res_update(cursor, choices, room):
+def fr2_res_update(cursor, choices, df):
     try:
-
+        total_nights = (datetime.strptime(choices["end"], "%Y-%m-%d") - datetime.strptime(choices["start"], "%Y-%m-%d")).days
+        query = """INSERT INTO lab7_reservations (Room, CheckIn, Checkout, Rate, LastName, FirstName, Adults, Kids)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s);"""
+        params = [
+            df["RoomCode"],
+            choices["start"],
+            choices["end"],
+            str(round(float(df["TotalCost"]) / total_nights, 2)),
+            choices["last"],
+            choices["first"],
+            choices["adults"],
+            choices["children"]
+        ]
+        cursor.execute(query, params)
         return True
     except:
         return False
