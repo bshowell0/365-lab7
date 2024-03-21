@@ -1,5 +1,6 @@
 from . import printer, validate
-from datetime import datetime
+from datetime import datetime, timedelta
+import pandas as pd  #TODO remove
 
 def fr1(cursor):
     request = (
@@ -70,11 +71,13 @@ def fr2(cursor):
                 FROM
                     lab7_reservations AS res
                 WHERE
-                    (res.CheckIn < %s AND res.Checkout >= %s)
+                    (res.CheckIn < %s AND res.Checkout > %s) OR (res.CheckIn <= %s AND res.Checkout > %s)
             )
             AND r.maxOcc >= %s
     """
     params = [
+        choices["end"],
+        choices["start"],
         choices["end"],
         choices["start"],
         str(int(choices["children"]) + int(choices["adults"]))
@@ -89,15 +92,134 @@ def fr2(cursor):
 
     query += " ORDER BY r.basePrice;"
 
-    print(query, params)
     cursor.execute(query, params)
-
 
     result = cursor.fetchall()
     if result != []:
         return printer.fr2_res(cursor, result, choices)
     else:
         return fr2_res_empty(cursor, choices)
+
+def fr2_res_empty(cursor, choices):
+    start_date = datetime.strptime(choices['start'], '%Y-%m-%d').date()
+    end_date = datetime.strptime(choices['end'], '%Y-%m-%d').date()
+    num_days = (end_date - start_date).days
+    query2 = """
+        SELECT
+            NextCheckout,
+            NextCheckIn
+        FROM (
+            SELECT
+                MIN(res1.Checkout) AS NextCheckout,
+                (SELECT MIN(res2.CheckIn) FROM lab7_reservations AS res2 WHERE res2.CheckIn > MIN(res1.Checkout) AND (res2.Room = %s OR %s = 'ANY')) AS NextCheckIn
+            FROM
+                lab7_reservations AS res1
+            JOIN lab7_rooms AS rooms
+            WHERE
+                res1.Checkout > %s AND
+                rooms.maxOcc >= %s AND
+                (res1.Room = %s OR %s = 'ANY')
+        ) AS subquery
+        WHERE
+            DATEDIFF(NextCheckIn, NextCheckout) >= %s
+        ORDER BY NextCheckin
+    """
+    params2 = [choices["room"], choices["room"], choices["start"], str(int(choices["children"]) + int(choices["adults"])), choices["room"], choices["room"], num_days]
+    cursor.execute(query2, params2)
+    result2 = cursor.fetchall()
+    print(result2)
+    old_dates = (choices["start"], choices["end"])
+    choices["start"] = result2[0][0]
+    choices["end"] = choices["start"] + timedelta(days=num_days)
+    print(choices)
+    query = """
+        SELECT
+            r.RoomCode,
+            r.RoomName,
+            r.Beds,
+            r.bedType,
+            r.maxOcc,
+            r.basePrice,
+            r.decor
+        FROM
+            lab7_rooms AS r
+        WHERE
+            r.RoomCode NOT IN (
+                SELECT
+                    res.Room
+                FROM
+                    lab7_reservations AS res
+                WHERE
+                    (res.CheckIn < %s AND res.Checkout > %s) OR (res.CheckIn <= %s AND res.Checkout > %s)
+            )
+            AND r.maxOcc >= %s
+    """
+    params = [
+        choices["end"],
+        choices["start"],
+        choices["end"],
+        choices["start"],
+        str(int(choices["children"]) + int(choices["adults"]))
+    ]
+
+
+    if choices["room"] != 'ANY':
+        query += " AND r.RoomCode = %s"
+        params.append(choices["room"])
+    if choices["bed"] != 'ANY':
+        query += " AND r.bedType = %s"
+        params.append(choices["bed"])
+
+    query += " ORDER BY r.basePrice;"
+
+    cursor.execute(query, params)
+
+    result = cursor.fetchall()
+    print(result)
+    choices["start"] = old_dates[0]
+    choices["end"] = old_dates[1]
+    query = """
+        SELECT
+            r.RoomCode,
+            r.RoomName,
+            r.Beds,
+            r.bedType,
+            r.maxOcc,
+            r.basePrice,
+            r.decor
+        FROM
+            lab7_rooms AS r
+        WHERE
+            r.RoomCode NOT IN (
+                SELECT
+                    res.Room
+                FROM
+                    lab7_reservations AS res
+                WHERE
+                    (res.CheckIn < %s AND res.Checkout > %s) OR (res.CheckIn <= %s AND res.Checkout > %s)
+            )
+            AND r.maxOcc >= %s
+        LIMIT 5
+    """
+    params = [
+        choices["end"],
+        choices["start"],
+        choices["end"],
+        choices["start"],
+        str(int(choices["children"]) + int(choices["adults"]))
+    ]
+    cursor.execute(query, params)
+    result2 = cursor.fetchall()
+    # combine result and result2
+    df = pd.DataFrame(result, columns=["RoomCode", "RoomName", "Beds", "BedType", "MaxOcc", "BasePrice", "Decor"])
+    df2 = pd.DataFrame(result2, columns=["RoomCode", "RoomName", "Beds", "BedType", "MaxOcc", "BasePrice", "Decor"])
+    # combine dataframes
+    df_combined = pd.concat([df, df2]).reset_index(drop=True)
+    df.index += 1
+    print(df_combined[:5])
+
+    exit()
+    return printer.fr2_res_empty(result, choices)
 
 def fr2_res_update(cursor, choices, df):
     try:
@@ -118,6 +240,3 @@ def fr2_res_update(cursor, choices, df):
         return True
     except:
         return False
-
-def fr2_res_empty(cursor, choices):
-    pass
