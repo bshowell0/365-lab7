@@ -50,41 +50,53 @@ def fr1(cursor):
 def fr2(cursor):
     choices = printer.fr2_req()
     choices = validate.fr2_req(choices)
-    query = f"""
-    SELECT
-        r.RoomCode,
-        r.RoomName,
-        r.Beds,
-        r.bedType,
-        r.maxOcc,
-        r.basePrice,
-        r.decor
-    FROM
-        lab7_rooms AS r
-    WHERE
-        r.RoomCode NOT IN (
-            SELECT
-                res.Room
-            FROM
-                lab7_reservations AS res
-            WHERE
-                (res.CheckIn < '{choices["end"]}' AND res.Checkout > '{choices["start"]}')
-        )
-        AND r.maxOcc >= {int(choices["children"]) + int(choices["adults"])}
+    query = """
+        SELECT
+            r.RoomCode,
+            r.RoomName,
+            r.Beds,
+            r.bedType,
+            r.maxOcc,
+            r.basePrice,
+            r.decor
+        FROM
+            lab7_rooms AS r
+        WHERE
+            r.RoomCode NOT IN (
+                SELECT
+                    res.Room
+                FROM
+                    lab7_reservations AS res
+                WHERE
+                    (res.CheckIn < ? AND res.Checkout > ?)
+            )
+            AND r.maxOcc >= ?
     """
-    query += "   "
+    params = [choices["end"], choices["start"], int(choices["children"]) + int(choices["adults"])]
+
     if choices["room"] != 'ANY':
-        query += f""" AND r.RoomCode = '{choices["room"]}'"""
+        query += " AND r.RoomCode = ?"
+        params.append(choices["room"])
     if choices["bed"] != 'ANY':
-        query += f""" AND r.bedType = '{choices["bed"]}'"""
-    query += "\nORDER BY r.basePrice;"
-    # print(choices)
+        query += " AND r.bedType = ?"
+        params.append(choices["bed"])
+
+    query += " ORDER BY r.basePrice;"
+
+    cursor.execute(query, params)
     cursor.execute(query)
     result = cursor.fetchall()
     if result != []:
-        printer.fr2_res(result, choices)
+        printer.fr2_res(cursor, result, choices)
     else:
         fr2_res_empty(cursor, choices)
+
+def fr2_res_update(cursor, choices, room):
+    try:
+
+        return True
+    except:
+        return False
 
 def fr2_res_empty(cursor, choices):
     pass
