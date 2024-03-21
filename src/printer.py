@@ -77,12 +77,20 @@ def fr2_res(data, choices):
     df["TotalCost"] = df["TotalCost"].map("{:.2f}".format)
     df.index += 1
     print(df)
-    choice = None
-    while choice is None or (not choice.isdigit() or int(choice) not in df.index):
-        if choice is not None:
+    num_selected = None
+    while num_selected is None or (num_selected.isdigit() and not (df.index.start <= int(num_selected) < df.index.stop) and int(num_selected) != 0):
+        if num_selected is not None:
             print("Invalid input. Please enter the number of the room you'd like to reserve.")
-        choice = input("Choose the number of the room you'd like to reserve, or 0 to cancel: ")
-        print("\033[H\033[J", end="")
-    choice = int(choice)
-    if choice == 0:
+        num_selected = input("Choose the number of the room you'd like to reserve, or 0 to cancel: ")
+    print("\033[H\033[J", end="")
+    num_selected = int(num_selected)
+    if num_selected == 0:
         return
+    # # failed experiment
+    # print(df[:num_selected])
+    # print("\033[92m", '\n'.join(df[num_selected:num_selected+1].to_string().split('\n')[1:]), "\033[0m", sep="")
+    # print('\n'.join(df[num_selected+1:].to_string().split('\n')[1:]))
+    chosen_room = df[num_selected-1:num_selected].to_string().split('\n')
+    print(f"{chosen_room[0]}\n\033[92m{chosen_room[1]}\033[0m\n")
+    print("Your reservation under the name of", choices["first"], choices["last"], "for room", df.loc[num_selected, "RoomCode"], "has been made for", choices["start"], "until", choices["end"])
+    # TODO - make and print a reservation code, then actually add it to the database
