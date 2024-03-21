@@ -60,5 +60,10 @@ def fr2_req():
     choices = {}
     for i, option in enumerate(options):
         choices[option] = input(f"\033[0m{disp[i]}\033[4m") if i > 0 else input("\033[3;13H\033[4m")
-    print("\033[0m", end="")
+    print("\033[0m\033[H\033[J", end="")
     return choices
+
+def fr2_res(data):
+    df = pd.DataFrame(data, columns=["RoomCode", "RoomName", "Beds", "BedType", "MaxOcc", "BasePrice", "Decor"])
+    df.index += 1
+    print(df)
