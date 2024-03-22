@@ -88,7 +88,7 @@ def fr2_res(cursor, data, choices):
     print("\033[H\033[J", end="")
     num_selected = int(num_selected)
     if num_selected == 0:
-        return False
+        return (False, [])
     # # failed experiment
     # print(df[:num_selected])
     # print("\033[92m", '\n'.join(df[num_selected:num_selected+1].to_string().split('\n')[1:]), "\033[0m", sep="")
@@ -96,22 +96,13 @@ def fr2_res(cursor, data, choices):
 
     if not request.fr2_res_update(cursor, choices, df.loc[num_selected]):
         print("Reservation failed. Please try again.")
-        return False
+        return (False, [])
     chosen_room = df[num_selected-1:num_selected].to_string().split('\n')
     print(f"{chosen_room[0]}\n\033[92m{chosen_room[1]}\033[0m\n")
     print("Your reservation under the name of", choices["first"], choices["last"], "for room", df.loc[num_selected, "RoomCode"], "has been made for", choices["start"], "until", choices["end"])
-    return True
+    return (True, df.loc[num_selected])
 
 def fr2_empty_res(cursor, df, choices):
-    # start_date = datetime.strptime(choices['start'], '%Y-%m-%d').date()
-    # end_date = datetime.strptime(choices['end'], '%Y-%m-%d').date()
-    # num_weekdays = 0
-    # num_weekends = 0
-    # for i in range((end_date - start_date).days):
-    #     if (start_date + timedelta(days=i)).weekday() < 5:
-    #         num_weekdays += 1
-    #     else:
-    #         num_weekends += 1
 
     def calculate_total_cost(row):
         start_date = datetime.strptime(row['CheckIn'], '%Y-%m-%d').date()
@@ -126,6 +117,8 @@ def fr2_empty_res(cursor, df, choices):
         total_cost = num_weekdays * row['BasePrice'] + num_weekends * row['BasePrice'] * Decimal('1.1')
         return "{:.2f}".format(total_cost)
 
+    if df.empty:
+        return (False, [])
     df['TotalCost'] = df.apply(calculate_total_cost, axis=1)
 
     print(df)
@@ -137,12 +130,18 @@ def fr2_empty_res(cursor, df, choices):
     print("\033[H\033[J", end="")
     num_selected = int(num_selected)
     if num_selected == 0:
-        return False
+        return (False, [])
 
     if not request.fr2_res_update(cursor, choices, df.loc[num_selected]):
         print("Reservation failed. Please try again.")
-        return False
+        return (False, [])
     chosen_room = df[num_selected-1:num_selected].to_string().split('\n')
     print(f"{chosen_room[0]}\n\033[92m{chosen_room[1]}\033[0m\n")
     print("Your reservation under the name of", choices["first"], choices["last"], "for room", df.loc[num_selected, "RoomCode"], "has been made for", df.loc[num_selected, 'CheckIn'], "until", df.loc[num_selected, 'CheckOut'])
-    return True
+    return (True, df.loc[num_selected])
+
+def res_code(code):
+    print(f"Your reservation code is {code}")
+
+def failed():
+    print("Sorry, there are no exact nor approximate reservations available matching your criteria.")

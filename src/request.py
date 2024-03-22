@@ -49,7 +49,7 @@ def fr1(cursor):
     result = cursor.fetchall()
     printer.fr1_res(result)
 
-def fr2(cursor):
+def fr2(cursor, conn):
     choices = printer.fr2_req()
     choices = validate.fr2_req(choices)
 
@@ -96,9 +96,14 @@ def fr2(cursor):
 
     result = cursor.fetchall()
     if result != []:
-        return printer.fr2_res(cursor, result, choices)
+        (success, df) = printer.fr2_res(cursor, result, choices)
     else:
-        return fr2_res_empty(cursor, choices)
+        (success, df) = fr2_res_empty(cursor, choices)
+    if success:
+        conn.commit()
+        printer.res_code(get_res_code(cursor, df))
+    else:
+        printer.failed()
 
 def fr2_res_empty(cursor, choices):
     start_date = datetime.strptime(choices['start'], '%Y-%m-%d').date()
@@ -237,3 +242,13 @@ def fr2_res_update(cursor, choices, df):
         return True
     except:
         return False
+
+def get_res_code(cursor, df):
+    query = """
+SELECT CODE
+FROM lab7_reservations
+WHERE Room = %s AND CheckIn = %s AND Checkout = %s
+"""
+    params = [df["RoomCode"], df["CheckIn"], df["CheckOut"]]
+    cursor.execute(query, params)
+    return cursor.fetchall()[0][0]
