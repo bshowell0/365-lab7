@@ -127,11 +127,10 @@ def fr2_res_empty(cursor, choices):
     params2 = [choices["room"], choices["room"], choices["start"], str(int(choices["children"]) + int(choices["adults"])), choices["room"], choices["room"], num_days]
     cursor.execute(query2, params2)
     result2 = cursor.fetchall()
-    print(result2)
     old_dates = (choices["start"], choices["end"])
-    choices["start"] = result2[0][0]
-    choices["end"] = choices["start"] + timedelta(days=num_days)
-    print(choices)
+    new_dates = (result2[0][0].strftime("%Y-%m-%d"), (result2[0][0] + timedelta(days=num_days)).strftime("%Y-%m-%d"), result2[0][1].strftime("%Y-%m-%d"))
+    choices["start"] = new_dates[0]
+    choices["end"] = new_dates[1]
     query = """
         SELECT
             r.RoomCode,
@@ -174,8 +173,7 @@ def fr2_res_empty(cursor, choices):
 
     cursor.execute(query, params)
 
-    result = cursor.fetchall()
-    print(result)
+    result1 = cursor.fetchall()
     choices["start"] = old_dates[0]
     choices["end"] = old_dates[1]
     query = """
@@ -210,26 +208,25 @@ def fr2_res_empty(cursor, choices):
     ]
     cursor.execute(query, params)
     result2 = cursor.fetchall()
-    # combine result and result2
-    df = pd.DataFrame(result, columns=["RoomCode", "RoomName", "Beds", "BedType", "MaxOcc", "BasePrice", "Decor"])
+    df1 = pd.DataFrame(result1, columns=["RoomCode", "RoomName", "Beds", "BedType", "MaxOcc", "BasePrice", "Decor"])
+    df1['CheckIn'] = new_dates[0]
+    df1['CheckOut'] = new_dates[1]
     df2 = pd.DataFrame(result2, columns=["RoomCode", "RoomName", "Beds", "BedType", "MaxOcc", "BasePrice", "Decor"])
-    # combine dataframes
-    df_combined = pd.concat([df, df2]).reset_index(drop=True)
+    df2['CheckIn'] = old_dates[0]
+    df2['CheckOut'] = old_dates[1]
+    df = pd.concat([df1, df2]).reset_index(drop=True)
     df.index += 1
-    print(df_combined[:5])
-
-    exit()
-    return printer.fr2_res_empty(result, choices)
+    return printer.fr2_empty_res(cursor, df, choices)
 
 def fr2_res_update(cursor, choices, df):
     try:
-        total_nights = (datetime.strptime(choices["end"], "%Y-%m-%d") - datetime.strptime(choices["start"], "%Y-%m-%d")).days
+        total_nights = (datetime.strptime(df["CheckOut"], "%Y-%m-%d") - datetime.strptime(df["CheckIn"], "%Y-%m-%d")).days
         query = """INSERT INTO lab7_reservations (Room, CheckIn, Checkout, Rate, LastName, FirstName, Adults, Kids)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s);"""
         params = [
             df["RoomCode"],
-            choices["start"],
-            choices["end"],
+            df["CheckIn"],
+            df["CheckOut"],
             str(round(float(df["TotalCost"]) / total_nights, 2)),
             choices["last"],
             choices["first"],

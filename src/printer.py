@@ -74,6 +74,8 @@ def fr2_res(cursor, data, choices):
         else:
             num_weekends += 1
     df = pd.DataFrame(data, columns=["RoomCode", "RoomName", "Beds", "BedType", "MaxOcc", "BasePrice", "Decor"])
+    df['CheckIn'] = choices['start']
+    df['CheckOut'] = choices['end']
     df["TotalCost"] = num_weekdays * df['BasePrice'] + num_weekends * df['BasePrice'] * Decimal('1.1')
     df["TotalCost"] = df["TotalCost"].map("{:.2f}".format)
     df.index += 1
@@ -81,7 +83,7 @@ def fr2_res(cursor, data, choices):
     num_selected = None
     while num_selected is None or (num_selected.isdigit() and not (df.index.start <= int(num_selected) < df.index.stop) and int(num_selected) != 0):
         if num_selected is not None:
-            print("Invalid input. Please enter the number of the room you'd like to reserve.")
+            print("Invalid input. Please enter the number of the room you'd like to reserve, or 0 to cancel.")
         num_selected = input("Choose the number of the room you'd like to reserve, or 0 to cancel: ")
     print("\033[H\033[J", end="")
     num_selected = int(num_selected)
@@ -98,4 +100,49 @@ def fr2_res(cursor, data, choices):
     chosen_room = df[num_selected-1:num_selected].to_string().split('\n')
     print(f"{chosen_room[0]}\n\033[92m{chosen_room[1]}\033[0m\n")
     print("Your reservation under the name of", choices["first"], choices["last"], "for room", df.loc[num_selected, "RoomCode"], "has been made for", choices["start"], "until", choices["end"])
+    return True
+
+def fr2_empty_res(cursor, df, choices):
+    # start_date = datetime.strptime(choices['start'], '%Y-%m-%d').date()
+    # end_date = datetime.strptime(choices['end'], '%Y-%m-%d').date()
+    # num_weekdays = 0
+    # num_weekends = 0
+    # for i in range((end_date - start_date).days):
+    #     if (start_date + timedelta(days=i)).weekday() < 5:
+    #         num_weekdays += 1
+    #     else:
+    #         num_weekends += 1
+
+    def calculate_total_cost(row):
+        start_date = datetime.strptime(row['CheckIn'], '%Y-%m-%d').date()
+        end_date = datetime.strptime(row['CheckOut'], '%Y-%m-%d').date()
+        num_weekdays = 0
+        num_weekends = 0
+        for i in range((end_date - start_date).days):
+            if (start_date + timedelta(days=i)).weekday() < 5:
+                num_weekdays += 1
+            else:
+                num_weekends += 1
+        total_cost = num_weekdays * row['BasePrice'] + num_weekends * row['BasePrice'] * Decimal('1.1')
+        return "{:.2f}".format(total_cost)
+
+    df['TotalCost'] = df.apply(calculate_total_cost, axis=1)
+
+    print(df)
+    num_selected = None
+    while num_selected is None or (num_selected.isdigit() and not (df.index.start <= int(num_selected) < df.index.stop) and int(num_selected) != 0):
+        if num_selected is not None:
+            print("Invalid input. Please enter the number of the room you'd like to reserve, or 0 to cancel.")
+        num_selected = input("Sorry, no rooms exactly fitting your criteria were found. Here are some options closely matching your request.\nChoose the number of the room you'd like to reserve, or 0 to cancel: ")
+    print("\033[H\033[J", end="")
+    num_selected = int(num_selected)
+    if num_selected == 0:
+        return False
+
+    if not request.fr2_res_update(cursor, choices, df.loc[num_selected]):
+        print("Reservation failed. Please try again.")
+        return False
+    chosen_room = df[num_selected-1:num_selected].to_string().split('\n')
+    print(f"{chosen_room[0]}\n\033[92m{chosen_room[1]}\033[0m\n")
+    print("Your reservation under the name of", choices["first"], choices["last"], "for room", df.loc[num_selected, "RoomCode"], "has been made for", df.loc[num_selected, 'CheckIn'], "until", df.loc[num_selected, 'CheckOut'])
     return True
