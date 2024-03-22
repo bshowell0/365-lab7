@@ -2,7 +2,7 @@ import os
 import pandas as pd
 from datetime import datetime, timedelta
 from decimal import Decimal
-from . import request
+from . import request, validate
 
 
 pd.set_option('display.max_columns', None)
@@ -143,5 +143,32 @@ def fr2_empty_res(cursor, df, choices):
 def res_code(code):
     print(f"Your reservation code is {code}")
 
-def failed():
+def fr2_failed():
     print("Sorry, there are no exact nor approximate reservations available matching your criteria.")
+
+
+def fr3_req():
+    res_num = None
+    while not validate.fr3_req(res_num):
+        if res_num is not None:
+            print("Invalid input. Please enter the reservation code you'd like to cancel.")
+        res_num = input("Please enter the reservation code you'd like to cancel: ")
+    print("\033[H\033[J", end="")
+    return res_num
+
+def fr3_failed():
+    print("Sorry, no reservation was found with that code.")
+
+def fr3_confirm(code, data):
+    print(f"Reservation {code}:")
+    df = pd.DataFrame(data, columns=["CODE", "Room", "CheckIn", "Checkout", "Rate", "LastName", "FirstName", "Adults", "Kids"])
+    print(df)
+    f = {"u": "\033[4m", "r": "\033[0m"}  # format: [underline, reset]
+    confirm = None
+    while validate.fr3_confirm(confirm) is False:
+        if confirm is not None:
+            print(f"Invalid input. Please enter '({f['u']}Y{f['r']}es' or '{f['u']}N{f['r']}o'.")
+        confirm = input(f"Are you sure you want to cancel this reservation? ({f['u']}Y{f['r']}es/{f['u']}N{f['r']}o): ").upper()
+    print("\033[H\033[J", end="")
+    return confirm[0] == "Y"
+

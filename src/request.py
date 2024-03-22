@@ -103,7 +103,7 @@ def fr2(cursor, conn):
         conn.commit()
         printer.res_code(get_res_code(cursor, df))
     else:
-        printer.failed()
+        printer.fr2_failed()
 
 def fr2_res_empty(cursor, choices):
     start_date = datetime.strptime(choices['start'], '%Y-%m-%d').date()
@@ -252,3 +252,21 @@ WHERE Room = %s AND CheckIn = %s AND Checkout = %s
     params = [df["RoomCode"], df["CheckIn"], df["CheckOut"]]
     cursor.execute(query, params)
     return cursor.fetchall()[0][0]
+
+
+def fr3(cursor, conn):
+    res_num = printer.fr3_req()
+    # get reservation info
+    query = "SELECT * FROM lab7_reservations WHERE CODE = %s"
+    cursor.execute(query, [res_num])
+    result = cursor.fetchall()
+    if result == []:
+        printer.fr3_failed()
+        return
+    if not printer.fr3_confirm(res_num, result):
+        return
+    query = "DELETE FROM lab7_reservations WHERE CODE = %s"
+    cursor.execute(query, [res_num])
+    conn.commit()
+    print("Reservation", res_num, "cancelled.")
+

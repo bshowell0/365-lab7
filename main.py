@@ -21,7 +21,7 @@ def main():
         elif validate.fr2(usr):
             request.fr2(cursor, conn)
         elif validate.fr3(usr):
-            pass
+            request.fr3(cursor, conn)
         elif validate.fr4(usr):
             pass
         elif validate.fr5(usr):

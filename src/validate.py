@@ -44,6 +44,12 @@ def is_valid_date(date_str, when=""):
 def fr3(usr):
     return usr == "fr3" or usr == "reservation cancellation" or usr == "cancel"
 
+def fr3_req(code):
+    return code is not None and code.isdigit()
+
+def fr3_confirm(usr):
+    return usr == "YES" or usr == "Y" or usr == "NO" or usr == "N"
+
 def fr4(usr):
     return usr == "fr4" or usr == "detailed reservation information" or usr == "detail" or usr == "info"
 
