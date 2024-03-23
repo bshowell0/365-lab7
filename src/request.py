@@ -1,6 +1,7 @@
 from . import printer, validate
 from datetime import datetime, timedelta
-import pandas as pd  #TODO remove
+import pandas as pd
+
 
 def fr1(cursor):
     request = (

@@ -5,8 +5,6 @@ from src import *
 
 load_dotenv()
 
-# add `# type: ignore` to supress incorrect not defined errors
-
 def main():
     conn = mysql.connector.connect(user=os.getenv('DB_USER'),
                                    password=os.getenv('DB_PASSWORD'),
@@ -30,13 +28,8 @@ def main():
             printer.invalid()
         usr = printer.usr("\n")
 
-
-
-
-    # conn.commit()
-
-    # cursor.close()
-    # conn.close()
+    cursor.close()
+    conn.close()
 
 
 if __name__ == "__main__":

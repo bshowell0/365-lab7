@@ -6,6 +6,7 @@ from . import request, validate
 
 
 pd.set_option('display.max_columns', None)
+pd.set_option('display.max_rows', None)
 try:
     terminal_width = os.get_terminal_size().columns
     pd.set_option('display.width', terminal_width)
@@ -89,10 +90,6 @@ def fr2_res(cursor, data, choices):
     num_selected = int(num_selected)
     if num_selected == 0:
         return (False, [])
-    # # failed experiment
-    # print(df[:num_selected])
-    # print("\033[92m", '\n'.join(df[num_selected:num_selected+1].to_string().split('\n')[1:]), "\033[0m", sep="")
-    # print('\n'.join(df[num_selected+1:].to_string().split('\n')[1:]))
 
     if not request.fr2_res_update(cursor, choices, df.loc[num_selected]):
         print("Reservation failed. Please try again.")
@@ -204,8 +201,6 @@ def fr5(result):
     df = df.explode('Date')
     df['DailyRevenue'] = df['Rate']
     df['Month'] = df['Date'].dt.month
-    # print("df:", df)
-    # print("monthly revenue:", monthly_revenue)
     month_names = {
         1: 'January',
         2: 'February',
