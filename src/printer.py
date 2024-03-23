@@ -146,7 +146,6 @@ def res_code(code):
 def fr2_failed():
     print("Sorry, there are no exact nor approximate reservations available matching your criteria.")
 
-
 def fr3_req():
     res_num = None
     while not validate.fr3_req(res_num):
@@ -161,7 +160,8 @@ def fr3_failed():
 
 def fr3_confirm(code, data):
     print(f"Reservation {code}:")
-    df = pd.DataFrame(data, columns=["CODE", "Room", "CheckIn", "Checkout", "Rate", "LastName", "FirstName", "Adults", "Kids"])
+    df = pd.DataFrame(data, columns=["Reservation", "Room", "CheckIn", "Checkout", "Rate", "LastName", "FirstName", "Adults", "Kids"])
+    df.index += 1
     print(df)
     f = {"u": "\033[4m", "r": "\033[0m"}  # format: [underline, reset]
     confirm = None
@@ -191,7 +191,10 @@ def fr4_req():
 def fr4_res(data):
     df = pd.DataFrame(data, columns=["CODE", "Room", "RoomName", "CheckIn", "Checkout", "Rate", "LastName", "FirstName", "Adults", "Kids"])
     df.index += 1
-    print(df)
+    if df.empty:
+        print("No reservations found.")
+    else:
+        print(df)
 
 def fr5(result):
     df = pd.DataFrame(result, columns=["Room", "Rate", "CheckIn", "Checkout"])
