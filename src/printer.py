@@ -14,7 +14,7 @@ except OSError:
 
 def welcome():
     try:
-        terminal_height = os.get_terminal_size().lines - 1
+        terminal_height = os.get_terminal_size().lines - 2
     except OSError:
         terminal_height = 100
     print("\n" * terminal_height + "\033[H\033[J", end="")
@@ -50,8 +50,8 @@ def fr2_req():
         "Last name: ",
         "Room code (“Any” to indicate no preference): ",
         "Bed type (“Any” to indicate no preference): ",
-        "Begin date of stay (YYYY-MM-DD): ",
-        "End date of stay (YYYY-MM-DD): ",
+        "Begin date of stay [YYYY-MM-DD]: ",
+        "End date of stay [YYYY-MM-DD]: ",
         "Number of children: ",
         "Number of adults: "
     ]
@@ -172,7 +172,26 @@ def fr3_confirm(code, data):
     print("\033[H\033[J", end="")
     return confirm[0] == "Y"
 
+def fr4_req():
+    disp = [
+        "First name: ",
+        "Last name: ",
+        "Date(s) [YYYY-MM-DD [to YYYY-MM-DD]]: ",
+        "Room code: ",
+        "Reservation number: "
+    ]
+    print("Please enter the following information to make a reservation:\n", "\n".join(disp), sep="\n")
+    options = ["first", "last", "date", "room", "res"]
+    choices = {}
+    for i, option in enumerate(options):
+        choices[option] = input(f"\033[0m{disp[i]}\033[4m") if i > 0 else input("\033[3;13H\033[4m")
+    print("\033[0m\033[H\033[J", end="")
+    return choices
 
+def fr4_res(data):
+    df = pd.DataFrame(data, columns=["CODE", "Room", "RoomName", "CheckIn", "Checkout", "Rate", "LastName", "FirstName", "Adults", "Kids"])
+    df.index += 1
+    print(df)
 
 def fr5(result):
     df = pd.DataFrame(result, columns=["Room", "Rate", "CheckIn", "Checkout"])

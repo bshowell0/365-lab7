@@ -272,7 +272,43 @@ def fr3(cursor, conn):
 
 
 def fr4(cursor):
-    pass
+    choices = printer.fr4_req()
+    choices = validate.fr4_req(choices)
+    # print(choices)
+    query = """
+SELECT res.CODE, res.Room, room.RoomName, res.CheckIn, res.Checkout, res.Rate, res.LastName, res.FirstName, res.Adults, res.Kids
+FROM lab7_reservations AS res
+JOIN lab7_rooms AS room ON res.Room = room.RoomCode
+WHERE true
+"""
+    params = []
+    if choices["first"] != "":
+        query += " AND res.FirstName LIKE %s "
+        params.append(choices["first"])
+    if choices["last"] != "":
+        query += " AND res.LastName LIKE %s "
+        params.append(choices["last"])
+    if choices["room"] != "":
+        query += " AND res.Room = %s "
+        params.append(choices["room"])
+    if choices["res"] != "":
+        query += " AND res.CODE = %s "
+        params.append(choices["res"])
+    if (date := choices["date"]) != "":
+        if len(date) == 1:
+            query += " AND (res.CheckIn = %s OR res.CheckOut = %s) "
+            params.append(date[0])
+            params.append(date[0])
+        else:  # len(date) == 2
+            query += " AND (res.CheckIn <= %s AND res.CheckOut > %s) "
+            params.append(date[1])
+            params.append(date[0])
+
+    query += " ORDER BY res.CheckIn;"
+
+    cursor.execute(query, params)
+    result = cursor.fetchall()
+    printer.fr4_res(result)
 
 
 def fr5(cursor):
