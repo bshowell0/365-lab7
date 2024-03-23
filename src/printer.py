@@ -167,7 +167,7 @@ def fr3_confirm(code, data):
     confirm = None
     while validate.fr3_confirm(confirm) is False:
         if confirm is not None:
-            print(f"Invalid input. Please enter '({f['u']}Y{f['r']}es' or '{f['u']}N{f['r']}o'.")
+            print(f"Invalid input. Please enter '{f['u']}Y{f['r']}es' or '{f['u']}N{f['r']}o'.")
         confirm = input(f"Are you sure you want to cancel this reservation? ({f['u']}Y{f['r']}es/{f['u']}N{f['r']}o): ").upper()
     print("\033[H\033[J", end="")
     return confirm[0] == "Y"
