@@ -270,3 +270,21 @@ def fr3(cursor, conn):
     conn.commit()
     print("Reservation", res_num, "cancelled.")
 
+
+def fr4(cursor):
+    pass
+
+
+def fr5(cursor):
+    request = """
+SELECT Room, Rate, CheckIn, Checkout
+FROM lab7_reservations
+WHERE YEAR(CheckIn) = YEAR(CURDATE()) AND YEAR(Checkout) = YEAR(CURDATE())
+OR (YEAR(CheckIn) = YEAR(CURDATE()) AND YEAR(Checkout) = YEAR(CURDATE()) + 1)
+OR (YEAR(CheckIn) = YEAR(CURDATE()) - 1 AND YEAR(Checkout) = YEAR(CURDATE())
+    AND NOT (MONTH(Checkout) = 1 AND DAY(Checkout) = 1))
+"""
+    cursor.execute(request)
+    result = cursor.fetchall()
+    printer.fr5(result)
+

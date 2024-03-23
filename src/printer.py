@@ -172,3 +172,35 @@ def fr3_confirm(code, data):
     print("\033[H\033[J", end="")
     return confirm[0] == "Y"
 
+
+
+def fr5(result):
+    df = pd.DataFrame(result, columns=["Room", "Rate", "CheckIn", "Checkout"])
+    df['CheckIn'] = pd.to_datetime(df['CheckIn'])
+    df['Checkout'] = pd.to_datetime(df['Checkout'])
+    df['Date'] = df.apply(lambda row: pd.date_range(start=row['CheckIn'], end=row['Checkout'] - pd.Timedelta(days=1), freq='D'), axis=1)
+    df = df.explode('Date')
+    df['DailyRevenue'] = df['Rate']
+    df['Month'] = df['Date'].dt.month
+    # print("df:", df)
+    # print("monthly revenue:", monthly_revenue)
+    month_names = {
+        1: 'January',
+        2: 'February',
+        3: 'March',
+        4: 'April',
+        5: 'May',
+        6: 'June',
+        7: 'July',
+        8: 'August',
+        9: 'September',
+        10: 'October',
+        11: 'November',
+        12: 'December'
+    }
+    pivot = df.pivot_table(index='Room', columns='Month', values='DailyRevenue', aggfunc='sum', fill_value=0)
+    pivot = pivot.rename(columns=month_names)
+    pivot['Yearly Total'] = pivot.sum(axis=1)
+    pivot.loc['Monthly Total'] = pivot.sum()
+    pivot = pivot.round(0).astype(int)
+    print(pivot)

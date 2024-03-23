@@ -23,9 +23,9 @@ def main():
         elif validate.fr3(usr):
             request.fr3(cursor, conn)
         elif validate.fr4(usr):
-            pass
+            request.fr4(cursor)
         elif validate.fr5(usr):
-            pass
+            request.fr5(cursor)
         else:
             printer.invalid()
         usr = printer.usr("\n")
