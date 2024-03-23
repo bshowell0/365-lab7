@@ -111,74 +111,82 @@ def fr2_res_empty(cursor, choices):
     num_days = (end_date - start_date).days
     query2 = """
         SELECT
-            NextCheckout,
-            NextCheckIn
-        FROM (
-            SELECT
-                MIN(res1.Checkout) AS NextCheckout,
-                (SELECT MIN(res2.CheckIn) FROM bshowell.lab7_reservations AS res2 WHERE res2.CheckIn > MIN(res1.Checkout) AND (res2.Room = %s OR %s = 'ANY')) AS NextCheckIn
-            FROM
-                bshowell.lab7_reservations AS res1
-            JOIN bshowell.lab7_rooms AS rooms
-            WHERE
-                res1.Checkout > %s AND
-                rooms.maxOcc >= %s AND
-                (res1.Room = %s OR %s = 'ANY')
-        ) AS subquery
+            MIN(res1.Checkout) AS NextCheckout,
+            (SELECT MIN(res2.CheckIn) FROM bshowell.lab7_reservations AS res2 WHERE res2.CheckIn > MIN(res1.Checkout) AND (res2.Room = %s OR %s = 'ANY')) AS NextCheckIn
+        FROM
+            bshowell.lab7_reservations AS res1
+        JOIN bshowell.lab7_rooms AS rooms
         WHERE
-            DATEDIFF(NextCheckIn, NextCheckout) >= %s
-        ORDER BY NextCheckin
+            res1.Checkout > %s AND
+            rooms.maxOcc >= %s AND
+            (res1.Room = %s OR %s = 'ANY')
+
     """
-    params2 = [choices["room"], choices["room"], choices["start"], str(int(choices["children"]) + int(choices["adults"])), choices["room"], choices["room"], num_days]
+    params2 = [choices["room"], choices["room"], choices["start"], str(int(choices["children"]) + int(choices["adults"])), choices["room"], choices["room"]]
+
+    query2 += " ORDER BY NextCheckout"
+
+
     cursor.execute(query2, params2)
     result2 = cursor.fetchall()
+    # print(result2)
+    # exit("user exit")
     old_dates = (choices["start"], choices["end"])
-    new_dates = (result2[0][0].strftime("%Y-%m-%d"), (result2[0][0] + timedelta(days=num_days)).strftime("%Y-%m-%d"), result2[0][1].strftime("%Y-%m-%d"))
-    choices["start"] = new_dates[0]
-    choices["end"] = new_dates[1]
-    query = """
-        SELECT
-            r.RoomCode,
-            r.RoomName,
-            r.Beds,
-            r.bedType,
-            r.maxOcc,
-            r.basePrice,
-            r.decor
-        FROM
-            bshowell.lab7_rooms AS r
-        WHERE
-            r.RoomCode NOT IN (
-                SELECT
-                    res.Room
-                FROM
-                    bshowell.lab7_reservations AS res
-                WHERE
-                    (res.CheckIn < %s AND res.Checkout > %s) OR (res.CheckIn <= %s AND res.Checkout > %s)
-            )
-            AND r.maxOcc >= %s
-    """
-    params = [
-        choices["end"],
-        choices["start"],
-        choices["end"],
-        choices["start"],
-        str(int(choices["children"]) + int(choices["adults"]))
-    ]
+    if result2 != []:
+        if (result2[0][0] + timedelta(days=num_days)) < result2[0][1]:
+            new_dates = (result2[0][0].strftime("%Y-%m-%d"), (result2[0][0] + timedelta(days=num_days)).strftime("%Y-%m-%d"), result2[0][1].strftime("%Y-%m-%d"))
+        else:
+            new_dates = (result2[0][0].strftime("%Y-%m-%d"), result2[0][1].strftime("%Y-%m-%d"), (result2[0][0] + timedelta(days=num_days)).strftime("%Y-%m-%d"))
+        choices["start"] = new_dates[0]
+        choices["end"] = new_dates[1]
+        # print("new_dates:", new_dates)
+        query = """
+            SELECT
+                r.RoomCode,
+                r.RoomName,
+                r.Beds,
+                r.bedType,
+                r.maxOcc,
+                r.basePrice,
+                r.decor
+            FROM
+                bshowell.lab7_rooms AS r
+            WHERE
+                r.RoomCode NOT IN (
+                    SELECT
+                        res.Room
+                    FROM
+                        bshowell.lab7_reservations AS res
+                    WHERE
+                        (res.CheckIn < %s AND res.Checkout > %s) OR (res.CheckIn <= %s AND res.Checkout > %s)
+                )
+                AND r.maxOcc >= %s
+        """
+        params = [
+            choices["end"],
+            choices["start"],
+            choices["end"],
+            choices["start"],
+            str(int(choices["children"]) + int(choices["adults"]))
+        ]
 
 
-    if choices["room"] != 'ANY':
-        query += " AND r.RoomCode = %s"
-        params.append(choices["room"])
-    if choices["bed"] != 'ANY':
-        query += " AND r.bedType = %s"
-        params.append(choices["bed"])
+        if choices["room"] != 'ANY':
+            query += " AND r.RoomCode = %s"
+            params.append(choices["room"])
+        if choices["bed"] != 'ANY':
+            query += " AND r.bedType = %s"
+            params.append(choices["bed"])
 
-    query += " ORDER BY r.basePrice;"
+        query += " ORDER BY r.basePrice;"
 
-    cursor.execute(query, params)
+        cursor.execute(query, params)
 
-    result1 = cursor.fetchall()
+        result1 = cursor.fetchall()
+        # print("result 1:", result1)
+    else:  # should probably never happen
+        result1 = []
+        new_dates = old_dates
     choices["start"] = old_dates[0]
     choices["end"] = old_dates[1]
     query = """
@@ -213,13 +221,31 @@ def fr2_res_empty(cursor, choices):
     ]
     cursor.execute(query, params)
     result2 = cursor.fetchall()
+
+    query3 = """
+SELECT r.RoomCode, r.RoomName, r.Beds, r.bedType, r.maxOcc, r.basePrice, r.decor,
+r1.Checkout AS GapStart, MIN(r2.CheckIn) AS GapEnd
+FROM bshowell.lab7_reservations r1
+JOIN bshowell.lab7_reservations r2 ON r1.Room = r2.Room AND r2.CheckIn > r1.Checkout
+JOIN bshowell.lab7_rooms r ON r.RoomCode = r1.Room
+WHERE r1.Checkout > %s
+GROUP BY r1.Room, r1.Checkout
+HAVING DATEDIFF(MIN(r2.CheckIn), r1.Checkout) > 1
+ORDER BY GapStart
+LIMIT 5;
+"""
+    cursor.execute(query3, [choices["start"]])
+    result3 = cursor.fetchall()
+
+
     df1 = pd.DataFrame(result1, columns=["RoomCode", "RoomName", "Beds", "BedType", "MaxOcc", "BasePrice", "Decor"])
     df1['CheckIn'] = new_dates[0]
     df1['CheckOut'] = new_dates[1]
     df2 = pd.DataFrame(result2, columns=["RoomCode", "RoomName", "Beds", "BedType", "MaxOcc", "BasePrice", "Decor"])
     df2['CheckIn'] = old_dates[0]
     df2['CheckOut'] = old_dates[1]
-    df = pd.concat([df1, df2]).reset_index(drop=True)
+    df3 = pd.DataFrame(result3, columns=["RoomCode", "RoomName", "Beds", "BedType", "MaxOcc", "BasePrice", "Decor", "CheckIn", "CheckOut"])
+    df = pd.concat([df1, df2, df3]).reset_index(drop=True).head(5)
     df.index += 1
     return printer.fr2_empty_res(cursor, df, choices)
 
