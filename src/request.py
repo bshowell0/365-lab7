@@ -11,7 +11,7 @@ def fr1(cursor):
             "MIN(CASE WHEN Checkout >= CURDATE() THEN Checkout END) + INTERVAL 1 DAY AS NextAvailableCheckIn, "
             "MAX(CASE WHEN Checkout <= CURDATE() THEN Checkout END) AS LastCheckout "
           "FROM  "
-            "lab7_reservations "
+            "bshowell.lab7_reservations "
           "WHERE  "
             "CheckIn >= DATE_SUB(CURDATE(), INTERVAL 180 DAY) "
           "GROUP BY  "
@@ -22,9 +22,9 @@ def fr1(cursor):
             "Room, "
             "DATEDIFF(Checkout, CheckIn) AS LengthOfStay "
           "FROM  "
-            "lab7_reservations "
+            "bshowell.lab7_reservations "
           "WHERE  "
-            "Checkout = (SELECT LastCheckout FROM reservation_data WHERE Room = lab7_reservations.Room) "
+            "Checkout = (SELECT LastCheckout FROM reservation_data WHERE Room = bshowell.lab7_reservations.Room) "
         ") "
         "SELECT  "
           "r.*,  "
@@ -33,7 +33,7 @@ def fr1(cursor):
           "s.LengthOfStay, "
           "res.LastCheckout AS CheckoutDate "
         "FROM  "
-          "lab7_rooms AS r "
+          "bshowell.lab7_rooms AS r "
         "LEFT JOIN  "
           "reservation_data AS res "
         "ON  "
@@ -63,13 +63,13 @@ def fr2(cursor, conn):
             r.basePrice,
             r.decor
         FROM
-            lab7_rooms AS r
+            bshowell.lab7_rooms AS r
         WHERE
             r.RoomCode NOT IN (
                 SELECT
                     res.Room
                 FROM
-                    lab7_reservations AS res
+                    bshowell.lab7_reservations AS res
                 WHERE
                     (res.CheckIn < %s AND res.Checkout > %s) OR (res.CheckIn <= %s AND res.Checkout > %s)
             )
@@ -116,10 +116,10 @@ def fr2_res_empty(cursor, choices):
         FROM (
             SELECT
                 MIN(res1.Checkout) AS NextCheckout,
-                (SELECT MIN(res2.CheckIn) FROM lab7_reservations AS res2 WHERE res2.CheckIn > MIN(res1.Checkout) AND (res2.Room = %s OR %s = 'ANY')) AS NextCheckIn
+                (SELECT MIN(res2.CheckIn) FROM bshowell.lab7_reservations AS res2 WHERE res2.CheckIn > MIN(res1.Checkout) AND (res2.Room = %s OR %s = 'ANY')) AS NextCheckIn
             FROM
-                lab7_reservations AS res1
-            JOIN lab7_rooms AS rooms
+                bshowell.lab7_reservations AS res1
+            JOIN bshowell.lab7_rooms AS rooms
             WHERE
                 res1.Checkout > %s AND
                 rooms.maxOcc >= %s AND
@@ -146,13 +146,13 @@ def fr2_res_empty(cursor, choices):
             r.basePrice,
             r.decor
         FROM
-            lab7_rooms AS r
+            bshowell.lab7_rooms AS r
         WHERE
             r.RoomCode NOT IN (
                 SELECT
                     res.Room
                 FROM
-                    lab7_reservations AS res
+                    bshowell.lab7_reservations AS res
                 WHERE
                     (res.CheckIn < %s AND res.Checkout > %s) OR (res.CheckIn <= %s AND res.Checkout > %s)
             )
@@ -191,13 +191,13 @@ def fr2_res_empty(cursor, choices):
             r.basePrice,
             r.decor
         FROM
-            lab7_rooms AS r
+            bshowell.lab7_rooms AS r
         WHERE
             r.RoomCode NOT IN (
                 SELECT
                     res.Room
                 FROM
-                    lab7_reservations AS res
+                    bshowell.lab7_reservations AS res
                 WHERE
                     (res.CheckIn < %s AND res.Checkout > %s) OR (res.CheckIn <= %s AND res.Checkout > %s)
             )
@@ -226,7 +226,7 @@ def fr2_res_empty(cursor, choices):
 def fr2_res_update(cursor, choices, df):
     try:
         total_nights = (datetime.strptime(df["CheckOut"], "%Y-%m-%d") - datetime.strptime(df["CheckIn"], "%Y-%m-%d")).days
-        query = """INSERT INTO lab7_reservations (Room, CheckIn, Checkout, Rate, LastName, FirstName, Adults, Kids)
+        query = """INSERT INTO bshowell.lab7_reservations (Room, CheckIn, Checkout, Rate, LastName, FirstName, Adults, Kids)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s);"""
         params = [
             df["RoomCode"],
@@ -246,7 +246,7 @@ def fr2_res_update(cursor, choices, df):
 def get_res_code(cursor, df):
     query = """
 SELECT CODE
-FROM lab7_reservations
+FROM bshowell.lab7_reservations
 WHERE Room = %s AND CheckIn = %s AND Checkout = %s
 """
     params = [df["RoomCode"], df["CheckIn"], df["CheckOut"]]
@@ -257,7 +257,7 @@ WHERE Room = %s AND CheckIn = %s AND Checkout = %s
 def fr3(cursor, conn):
     res_num = printer.fr3_req()
     # get reservation info
-    query = "SELECT * FROM lab7_reservations WHERE CODE = %s"
+    query = "SELECT * FROM bshowell.lab7_reservations WHERE CODE = %s"
     cursor.execute(query, [res_num])
     result = cursor.fetchall()
     if result == []:
@@ -265,7 +265,7 @@ def fr3(cursor, conn):
         return
     if not printer.fr3_confirm(res_num, result):
         return
-    query = "DELETE FROM lab7_reservations WHERE CODE = %s"
+    query = "DELETE FROM bshowell.lab7_reservations WHERE CODE = %s"
     cursor.execute(query, [res_num])
     conn.commit()
     print("Reservation", res_num, "cancelled.")
@@ -277,8 +277,8 @@ def fr4(cursor):
     # print(choices)
     query = """
 SELECT res.CODE, res.Room, room.RoomName, res.CheckIn, res.Checkout, res.Rate, res.LastName, res.FirstName, res.Adults, res.Kids
-FROM lab7_reservations AS res
-JOIN lab7_rooms AS room ON res.Room = room.RoomCode
+FROM bshowell.lab7_reservations AS res
+JOIN bshowell.lab7_rooms AS room ON res.Room = room.RoomCode
 WHERE true
 """
     params = []
@@ -314,7 +314,7 @@ WHERE true
 def fr5(cursor):
     request = """
 SELECT Room, Rate, CheckIn, Checkout
-FROM lab7_reservations
+FROM bshowell.lab7_reservations
 WHERE YEAR(CheckIn) = YEAR(CURDATE()) AND YEAR(Checkout) = YEAR(CURDATE())
 OR (YEAR(CheckIn) = YEAR(CURDATE()) AND YEAR(Checkout) = YEAR(CURDATE()) + 1)
 OR (YEAR(CheckIn) = YEAR(CURDATE()) - 1 AND YEAR(Checkout) = YEAR(CURDATE())
