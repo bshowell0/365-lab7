@@ -132,7 +132,7 @@ def fr2_res_empty(cursor, choices):
     # print(result2)
     # exit("user exit")
     old_dates = (choices["start"], choices["end"])
-    if result2 != []:
+    if result2 != [] and result2[0][0] is not None and result2[0][1] is not None:
         if (result2[0][0] + timedelta(days=num_days)) < result2[0][1]:
             new_dates = (result2[0][0].strftime("%Y-%m-%d"), (result2[0][0] + timedelta(days=num_days)).strftime("%Y-%m-%d"), result2[0][1].strftime("%Y-%m-%d"))
         else:
@@ -231,10 +231,12 @@ JOIN bshowell.lab7_rooms r ON r.RoomCode = r1.Room
 WHERE r1.Checkout > %s
 GROUP BY r1.Room, r1.Checkout
 HAVING DATEDIFF(MIN(r2.CheckIn), r1.Checkout) > 1
+AND %s <= r.maxOcc
 ORDER BY GapStart
 LIMIT 5;
+
 """
-    cursor.execute(query3, [choices["start"]])
+    cursor.execute(query3, [choices["start"], str(int(choices["children"]) + int(choices["adults"]))])
     result3 = cursor.fetchall()
 
 
@@ -245,6 +247,8 @@ LIMIT 5;
     df2['CheckIn'] = old_dates[0]
     df2['CheckOut'] = old_dates[1]
     df3 = pd.DataFrame(result3, columns=["RoomCode", "RoomName", "Beds", "BedType", "MaxOcc", "BasePrice", "Decor", "CheckIn", "CheckOut"])
+    df3['CheckIn'] = df3['CheckIn'].map(lambda x: x.strftime("%Y-%m-%d"))
+    df3['CheckOut'] = df3['CheckOut'].map(lambda x: x.strftime("%Y-%m-%d"))
     df = pd.concat([df1, df2, df3]).reset_index(drop=True).head(5)
     df.index += 1
     return printer.fr2_empty_res(cursor, df, choices)
